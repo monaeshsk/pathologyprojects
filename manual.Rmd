@@ -97,16 +97,6 @@ Histo <- remove_name(name = 'image')
 
 
 ```{r}
-##Association RUles for the level 2 information
-#Trying Transaction data
-
-#write.csv(Histo$ClinHx,"Histo.csv", row.names = TRUE)
-#trans <- read.transactions("Histo.csv",sep = ",")
-#histo_rules <- apriori(trans, parameter = list(support = 0.01, confidence = 0.5))
-#temp <- as(Histo$ClinHx, 'transactions')
-```
-
-```{r}
 #summary(histo_rules)
 ```
 
