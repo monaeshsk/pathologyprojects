@@ -1,0 +1,29 @@
+clin hx class,clin hx  categories,clin hx groups names,clin hx groups by rules,Distinct count of Lab No
+information provided,clinical information categories,immunosuppression - haematological,"neutropaenia, neutropen, oncology, chemo, cancer, AML, CLL, CML, ALL, lymphoma, myeloma, aplastic ",233
+information provided,clinical information categories,respiratory,"cough, pneumonia, resp, LRTI, sob, dyspnea, chest, pneumo, COPD",204
+information provided,clinical information categories,gastrointestinal,"abdo, diarrhoea, vomit, gastro, stool, append, peritonitis, pancreatitis",130
+information provided,clinical information categories,skin and soft tissue,"abscess, wound,  cellul, wound",129
+information provided,clinical information categories,urogenital,"urinary, urine, uro, UTI, pyelo, dysuria",91
+information provided,clinical information categories,micro organism names,"staph, strep, MSSA, MRSA, e.col, gram, pseud, enterobacter, kleb, bacteraemia",63
+information provided,clinical information categories,"altered level of consciousness, seizures","confus, gcs, seizure, convul, delirium, LOC",46
+information provided,clinical information categories,bone and joint,"osteomyel, arthritis, back pain, joint, OM, arthr",30
+information provided,clinical information categories,immunosuppression - transplant and drug related,"transplant, immunosup, immunocomp, tx, ritux ",20
+information provided,clinical information categories,renal failure and dialysis,"ESRF, dialysis",20
+information provided,clinical information categories,post operative complications,"post op, postop, ",18
+information provided,clinical information categories,endocarditis or valve disease,"endocarditis, valve, AVR, MVR, ie ",16
+information provided,clinical information categories,intravenous lines and devices,"line, PICC, port, hickman",13
+information provided,clinical information categories,travel related,"return key word travel & travel, return",13
+information provided,clinical information categories,antibiotic therapy,"antibiotic, vanc, vanco, gent, taz, cipro, mero",12
+information provided,clinical information categories,meningitis and encephalitis,"meningitis, encephalitis, photophobia",11
+information provided,clinical information categories,rash,rash,10
+information provided,clinical information categories,diabetic related terms,"DKA, ketoacid ",7
+information provided,"non-specific terms ie sepsis, fever, temp","sepsis, fever, temp without other information","sepsis, fever, septic, To spike, temp, temp spike, t, t spike, tspike",259
+information provided,"non-specific terms ie sepsis, fever, temp","sepsis, fever, temp without other information","sepsis, septic ",55
+information provided,"non-specific terms ie sepsis, fever, temp",unwell without other information,unwell ,256
+information provided,"non-specific terms ie sepsis, fever, temp",pyrexia unknown origin,"unknown, PUO, P.U.O",25
+uninformative,"nil supplied - nil, NA or illegible","nil supplied - text - NA, nil or illegible","nil, NA, not provided, illegible",3006
+uninformative,"nil supplied - nil, NA or illegible","nil supplied - ""refer to form or notes""","see image, see notes ",30
+uninformative,nil supplied - single punctuation mark or character,nil supplied - single character only,punctuation or single letter only group,1018
+uninformative,nil supplied - standing orders or protocols,nil supplied - standing orders or protocol,standing orders or protocols,75
+uninformative,nil supplied - standing orders or protocols,"nil supplied - ""screen""",screen ,45
+not grouped,not grouped,not grouped,not grouped,704

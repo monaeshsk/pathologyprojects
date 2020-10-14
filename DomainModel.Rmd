@@ -1,0 +1,253 @@
+---
+title: "Domain Model"
+output: html_document
+---
+
+```{r}
+library(quanteda)
+library(tm)
+
+#library(hunspell)
+library(tidytext)
+
+library(rlist)
+```
+
+
+
+```{r}
+library(readr)
+DomainKnowledge <- read_csv("DomainKnowledge.csv")
+BloodCult<- read_csv("BloodCultureClinHxSpeciDesc2015-202012.csv")
+BloodCult$Class <- as.character(NA)
+BloodCult$Subclass <- as.character(NA)
+```
+
+```{r}
+Sys.setenv(DICPATH = paste0(getwd(), "/hunspell-en-med-glut-workaround-master/"))
+```
+
+```{r}
+hunspell:::dicpath()
+dictionary("en_US")
+```
+
+
+
+
+
+
+```{r}
+count = 0
+for (doc in BloodCult$ClinHx){
+  for (word in tokenize_word(doc)){
+    count <- count+1
+  }
+}
+```
+
+
+```{r}
+for (doc in BloodCult$ClinHx[1:10]){
+  for (word in token)
+}
+
+```
+
+
+```{r}
+toks <- tokens(BloodCult$ClinHx)
+```
+
+
+```{r}
+BloodCult[which(test == FALSE),]
+```
+
+
+
+
+
+```{r}
+##LEVEL 1, No information
+
+#Dealing with NA values
+BloodCult[is.na(BloodCult$ClinHx),]$Subclass <- 'Nil'
+BloodCult[is.na(BloodCult$ClinHx),]$Class <- 'uninformative'
+
+#punctuation/character
+BloodCult$ClinHx <- removePunctuation(BloodCult$ClinHx)
+BloodCult$ClinHx <- trimws(BloodCult$ClinHx)
+
+#Single Character
+BloodCult[which(nchar(BloodCult$ClinHx) <= 1),]$Subclass<- 'Single Character'
+BloodCult[which(nchar(BloodCult$ClinHx) <= 1),]$Class<- 'uninformative'
+
+BloodCult[which(trimws(BloodCult$ClinHx) == ''),]$Subclass <- 'Punctuation'
+BloodCult[which(BloodCult$ClinHx == ''),]$Class <- 'uninformative'
+
+#nil/NA/Nan
+BloodCult[grep("nil", tolower(BloodCult$ClinHx)),]$Subclass<-  'Nil'
+BloodCult[grep("nil", tolower(BloodCult$ClinHx)),]$Class <- 'uninformative'
+
+BloodCult[grep("na", tolower(BloodCult$ClinHx)),]$Subclass<-  'Nil'
+BloodCult[grep("na", tolower(BloodCult$ClinHx)),]$Class <- 'uninformative'
+
+BloodCult[grep("nan", tolower(BloodCult$ClinHx)),]$Subclass<-  'Nil'
+BloodCult[grep("nan", tolower(BloodCult$ClinHx)),]$Class <- 'uninformative'
+
+```
+
+
+
+```{r}
+table(BloodCult$Subclass)
+```
+
+
+```{r}
+BloodCult[which(is.na(BloodCult$Subclass) == TRUE),]
+```
+
+
+
+
+
+```{r}
+ClinHxClass <- DomainKnowledge$`clin hx class`
+ClinHxCatagory <- DomainKnowledge$`clin hx  categories`
+```
+
+
+```{r}
+df <- unlist(strsplit(DomainKnowledge$`clin hx groups by rules`[1], ","))
+for (i in 2:28){
+  x <- unlist(strsplit(DomainKnowledge$`clin hx groups by rules`[i], ","))
+  length(x) <- 12
+   df <- cbind(df, x)
+}
+df <- as.data.frame(df)
+colnames(df) <- DomainKnowledge$`clin hx groups names`
+write.csv(df, 'DomainKnowledgeNew.csv', na = '', row.names = FALSE)
+```
+
+```{r}
+df$respiratory[!is.na(df$respiratory)]
+```
+
+```{r}
+df<- read_csv("DomainKnowledgeNew.csv")
+```
+
+
+```{r}
+dic_list <- split(as.matrix(df),col(df))
+dic_list <- lapply(dic_list, function(x) x[!is.na(x)])
+```
+
+
+```{r}
+dic <- quanteda::dictionary(dic_list)
+```
+
+
+```{r}
+toks <- tokens(BloodCult$ClinHx)
+```
+
+```{r}
+dict_toks <- tokens_lookup(toks, dictionary = dic)
+print(dict_toks)
+```
+
+
+```{r}
+mat <- as.matrix(dfm(dict_toks))
+```
+
+```{r}
+colnames(mat) <- colnames(df)
+```
+
+```{r}
+(mat)
+```
+
+
+
+```{r}
+c(NA, colnames(mat))[mat %*% 1:2 + 1]
+```
+
+
+```{r}
+for (i in colnames(mat)){
+  
+}
+```
+
+```{r}
+
+y <- unlist(strsplit(DomainKnowledge$`clin hx groups by rules`[2], ","))
+t <- unlist(strsplit(DomainKnowledge$`clin hx groups by rules`[1], ","))
+length(t) <- 12
+cbind(y,t,y)
+```
+
+
+##NON MANUAL TESTING
+
+
+```{r}
+x <- BloodCult[which(BloodCult$ReqMeth !=  'MANUAL'),]
+x$test <- rep('Does not contain sepsis/septic',nrow(x))
+x[grep('sepsis', x$ClinHx),]$test <- 'Contains sepsis/septic'
+x[grep('septic', x$ClinHx),]$test <- 'Contains sepsis/septic'
+x$test <- as.factor(x$test)
+table(x$test)
+```
+
+
+```{r}
+ggplot(data = x, aes(x = test, y = ))+  
+        geom_bar(aes(y = (..count..)/sum(..count..))) + 
+        scale_y_continuous(labels=percent)+
+        labs(x= '', y='Percentage of Non-Manual requests', title= 'Non Manual Requests')
+```
+
+
+
+```{r}
+x$RegDateTime %>%
+  mutate(RegDateTime = as.Date(RegDateTime, format = "%d/%m/%y"))
+```
+
+
+```{r}
+x$RegDateTime <- as.Date(x$RegDateTime, format = '%d/%m/%Y')
+```
+
+```{r}
+library(ggplot2)
+qplot(x = x$RegDateTime, y = x$)
+```
+
+
+```{r}
+require(reshape2)
+m_molten <- melt(x,'RegDateTime')
+```
+
+```{r}
+ggplot(m_molten, aes(x=RegDateTime, y=value)) + 
+  geom_bar(stat="identity")
+```
+
+```{r}
+hist(table(format(x$RegDateTime,"%m-%Y")))
+```
+
+```{r}
+
+```
+
