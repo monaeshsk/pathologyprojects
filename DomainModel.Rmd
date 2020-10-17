@@ -13,9 +13,8 @@ library(tidytext)
 library(rlist)
 ```
 
-
-
 ```{r}
+##READING IN DATA SETS ALONG WITH THE EXPERT DATABASE
 library(readr)
 DomainKnowledge <- read_csv("DomainKnowledge.csv")
 BloodCult<- read_csv("BloodCultureClinHxSpeciDesc2015-202012.csv")
@@ -24,24 +23,12 @@ BloodCult$Subclass <- as.character(NA)
 ```
 
 ```{r}
-Sys.setenv(DICPATH = paste0(getwd(), "/hunspell-en-med-glut-workaround-master/"))
+#Sys.setenv(DICPATH = paste0(getwd(), "/hunspell-en-med-glut-workaround-master/"))
 ```
 
 ```{r}
-hunspell:::dicpath()
-dictionary("en_US")
-```
-
-
-
-
-
-
-
-
-
-```{r}
-toks <- tokens(BloodCult$ClinHx)
+#hunspell:::dicpath()
+#dictionary("en_US")
 ```
 
 
@@ -80,23 +67,11 @@ BloodCult[grep("nan", tolower(BloodCult$ClinHx)),]$Class <- 'uninformative'
 
 
 
+
 ```{r}
 table(BloodCult$Subclass)
 ```
 
-
-```{r}
-BloodCult[which(is.na(BloodCult$Subclass) == TRUE),]
-```
-
-
-
-
-
-```{r}
-ClinHxClass <- DomainKnowledge$`clin hx class`
-ClinHxCatagory <- DomainKnowledge$`clin hx  categories`
-```
 
 
 ```{r}
@@ -124,17 +99,6 @@ dic_list <- lapply(dic_list, function(x) x[!is.na(x)])
 
 
 ```{r}
-dic_list1 <- as.list(df[,1])
-names(dic_list1) <- '1'
-dic1 <- quanteda::dictionary(dic_list1)
-
-as.matrix(dfm(tokens_lookup(toks, dictionary = dic1)))
-```
-
-
-
-
-```{r}
 dic <- quanteda::dictionary(dic_list)
 ```
 
@@ -151,27 +115,38 @@ print(dict_toks)
 
 ```{r}
 mat <- as.matrix(dfm(dict_toks))
-```
-
-```{r}
-colnames(mat) <- colnames(df)
-```
-
-```{r}
-(mat)
-```
-
-```{r}
-
+#colnames(mat) <- colnames(df)
 ```
 
 
 ```{r}
-for (i in 1:10){
-  if (is.na(BloodCult$Subclass[i])){
-  }
+test <- NULL
+for (i in 1:ncol(mat)){
+  temp <- as.logical(mat[,i])
+  test <- cbind(test, temp)
+  BloodCult[test[,i],]$Subclass <- colnames(df)[i]
+  BloodCult[test[,i],]$Class <- 'useful'
 }
 ```
+
+
+```{r}
+table(BloodCult$Subclass, useNA = 'always')
+```
+
+```{r}
+BloodCult[is.na(BloodCult$Subclass),]
+```
+
+
+```{r}
+BloodCult[test[,1],]
+```
+
+
+
+
+
 
 
 ```{r}
