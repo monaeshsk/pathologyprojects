@@ -37,31 +37,11 @@ dictionary("en_US")
 
 
 
-```{r}
-count = 0
-for (doc in BloodCult$ClinHx){
-  for (word in tokenize_word(doc)){
-    count <- count+1
-  }
-}
-```
 
-
-```{r}
-for (doc in BloodCult$ClinHx[1:10]){
-  for (word in token)
-}
-
-```
 
 
 ```{r}
 toks <- tokens(BloodCult$ClinHx)
-```
-
-
-```{r}
-BloodCult[which(test == FALSE),]
 ```
 
 
@@ -131,9 +111,6 @@ colnames(df) <- DomainKnowledge$`clin hx groups names`
 write.csv(df, 'DomainKnowledgeNew.csv', na = '', row.names = FALSE)
 ```
 
-```{r}
-df$respiratory[!is.na(df$respiratory)]
-```
 
 ```{r}
 df<- read_csv("DomainKnowledgeNew.csv")
@@ -144,6 +121,17 @@ df<- read_csv("DomainKnowledgeNew.csv")
 dic_list <- split(as.matrix(df),col(df))
 dic_list <- lapply(dic_list, function(x) x[!is.na(x)])
 ```
+
+
+```{r}
+dic_list1 <- as.list(df[,1])
+names(dic_list1) <- '1'
+dic1 <- quanteda::dictionary(dic_list1)
+
+as.matrix(dfm(tokens_lookup(toks, dictionary = dic1)))
+```
+
+
 
 
 ```{r}
@@ -173,6 +161,17 @@ colnames(mat) <- colnames(df)
 (mat)
 ```
 
+```{r}
+
+```
+
+
+```{r}
+for (i in 1:10){
+  if (is.na(BloodCult$Subclass[i])){
+  }
+}
+```
 
 
 ```{r}
@@ -193,6 +192,21 @@ t <- unlist(strsplit(DomainKnowledge$`clin hx groups by rules`[1], ","))
 length(t) <- 12
 cbind(y,t,y)
 ```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 ##NON MANUAL TESTING
