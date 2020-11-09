@@ -7,33 +7,32 @@ output: html_document
 library(quanteda)
 library(tm)
 
-#library(hunspell)
+library(stringr)
 library(tidytext)
-
 library(rlist)
+library(readr)
 ```
+
+
+```{r}
+##Function to test classified percentage
+percentageClassified <- function(db){
+  return (100-((sum(is.na(db$Subclass))/nrow(db))*100))
+}
+```
+
 
 ```{r}
 ##READING IN DATA SETS ALONG WITH THE EXPERT DATABASE
-library(readr)
-DomainKnowledge <- read_csv("DomainKnowledge.csv")
+
+
+#df<- read_csv("DomainKnowledgeNew.csv")
 BloodCult<- read_csv("BloodCultureClinHxSpeciDesc2015-202012.csv")
+
+#Creating empty variables for classificaiton
 BloodCult$Class <- as.character(NA)
 BloodCult$Subclass <- as.character(NA)
 ```
-
-```{r}
-#Sys.setenv(DICPATH = paste0(getwd(), "/hunspell-en-med-glut-workaround-master/"))
-```
-
-```{r}
-#hunspell:::dicpath()
-#dictionary("en_US")
-```
-
-
-
-
 
 ```{r}
 ##LEVEL 1, No information
@@ -66,67 +65,144 @@ BloodCult[grep("nan", tolower(BloodCult$ClinHx)),]$Class <- 'uninformative'
 ```
 
 
-
-
 ```{r}
-table(BloodCult$Subclass)
-```
-
-
-
-```{r}
-df <- unlist(strsplit(DomainKnowledge$`clin hx groups by rules`[1], ","))
-for (i in 2:28){
-  x <- unlist(strsplit(DomainKnowledge$`clin hx groups by rules`[i], ","))
-  length(x) <- 12
-   df <- cbind(df, x)
-}
-df <- as.data.frame(df)
-colnames(df) <- DomainKnowledge$`clin hx groups names`
-write.csv(df, 'DomainKnowledgeNew.csv', na = '', row.names = FALSE)
+#Converting the DomainKnowledeg file into a quanteda dictionary
+#dic_list <- split(as.matrix(df),col(df))
+#dic_list <- lapply(dic_list, function(x) x[!is.na(x)])
+#dic <- quanteda::dictionary(dic_list)
 ```
 
 
 ```{r}
-df<- read_csv("DomainKnowledgeNew.csv")
+Dict_Without_Other_df <- read.csv('Dict_Without_Other_Info.csv')
+#Dict_Without_Other_df[] <- lapply(Dict_Without_Other_df, function(x) str_c(x,'*'))
+Dict_Without_Other_list <- split(as.matrix(Dict_Without_Other_df),col(Dict_Without_Other_df))
+Dict_Without_Other_list <- lapply(Dict_Without_Other_list, function(x) x[!is.na(x)])
+Dict_Without_Other <- quanteda::dictionary(Dict_Without_Other_list)
 ```
 
 
 ```{r}
-dic_list <- split(as.matrix(df),col(df))
-dic_list <- lapply(dic_list, function(x) x[!is.na(x)])
+Dict_General_df <- read_csv("Dict_General_Terms.csv")
+#Adding * at the end for GLOB style matching so words like FEBRILEPNEUMONIA will be detected
+Dict_General_df[] <- lapply(Dict_General_df, function(x) str_c(x,'*'))
+Dict_General_list <- split(as.matrix(Dict_General_df),col(Dict_General_df))
+Dict_General_list<- lapply(Dict_General_list, function(x) x[!is.na(x)])
+Dict_General <- quanteda::dictionary(Dict_General_list)
 ```
 
-
 ```{r}
-dic <- quanteda::dictionary(dic_list)
-```
-
-
-```{r}
+#Converting BloodCult into tokens for easy classification 
 toks <- tokens(BloodCult$ClinHx)
 ```
 
+
 ```{r}
-dict_toks <- tokens_lookup(toks, dictionary = dic)
-print(dict_toks)
+#TokenLook up by quanteda matches tokens in dictionary to those in the BloodCult database
+dict_general <- tokens_lookup(toks, dictionary = Dict_General, case_insensitive = TRUE, valuetype = 'glob')
+mat_general <- as.matrix(dfm(dict_general))
+colnames(mat_general) <- colnames(Dict_General_df)
 ```
 
 
 ```{r}
-mat <- as.matrix(dfm(dict_toks))
-#colnames(mat) <- colnames(df)
+dict_without <- tokens_lookup(toks, dictionary = Dict_Without_Other, case_insensitive = TRUE, valuetype = 'glob')
+mat_without <- as.matrix(dfm(dict_without))
+colnames(mat_without) <- colnames(Dict_Without_Other_df)
+```
+
+```{r}
+mat_without[1:10,]
 ```
 
 
 ```{r}
-test <- NULL
-for (i in 1:ncol(mat)){
-  temp <- as.logical(mat[,i])
-  test <- cbind(test, temp)
-  BloodCult[test[,i],]$Subclass <- colnames(df)[i]
-  BloodCult[test[,i],]$Class <- 'useful'
-}
+mat_blank <- matrix(nrow = nrow(mat_general), ncol = ncol(mat_without))^0L - 1L
+colnames(mat_blank) <- colnames(Dict_Without_Other_df)
+mat_blank[which(rowSums(mat_general)==0),] <- mat_without[which(rowSums(mat_general)==0),]
+mat_words <- cbind(mat_general, mat_blank)
+
+sum(colSums(mat_words))
+
+#Mat_classified <- colnames(mat)[max.col(mat,ties.method="first")]
+#Mat_classified <- as.data.frame(Mat_classified)
+
+#sums <- rowSums(mat)
+#Mat_classified[sums == 0,] <- NA
+```
+
+```{r}
+mat_uninform <- matrix(nrow = nrow(mat_general), ncol = 4)^0L - 1L
+colnames(mat_uninform) <- c('None Provided', 'Non-Character', 'Single Character','Nil')
+mat_uninform[which(is.na(BloodCult$ClinHx)),1] <- 1
+mat_uninform[which(!str_detect(BloodCult$ClinHx,'[:alpha:]')),2] <- 1
+mat_uninform[which((nchar(str_remove_all(BloodCult$ClinHx,'[:space:]')) ==1) & str_detect(BloodCult$ClinHx,'[:alpha:]') & !is.na(BloodCult$ClinHx)),3] <- 1
+
+clinhxformat <- trimws(toupper(BloodCult$ClinHx))
+mat_uninform[which(clinhxformat == 'NIL'|clinhxformat =='NA'|clinhxformat =='NAN'|clinhxformat== 'NULL'|clinhxformat=='NOT APPLICABLE'),4] <- 1
+
+(colSums(mat_uninform))
+
+
+#nchar(str_remove_all(BloodCult$ClinHx,'[:space:]'))==1 + !is.na(BloodCult$ClinHx)
+#BloodCult$ClinHx[which(nchar(str_remove_all(BloodCult$ClinHx,'[:space:]')) ==1)]
+
+```
+
+
+```{r}
+clinhxformat <- trimws(removeNumbers(removePunctuation(tolower(BloodCult$ClinHx))))
+wordsstr <- toString(as.vector(clinhxformat), sep = ' ')
+wordsstr <- removeWords(wordsstr,stopwords('en'))
+
+wordsLong <- (str_split(removePunctuation(wordsstr), ' '))[[1]]
+wordsLong <- wordsLong[which(nchar(wordsLong)>=2)]
+
+words <- as.data.frame(table(wordsLong))
+#write.csv(words,'words.csv')
+```
+
+
+```{r}
+
+write.csv(words, 'words.csv')
+```
+
+```{r}
+stemCompletion(wordsShort, unique(wordsLong),type = 'shortest')
+#stemCompletion('hell', c('hello', 'helli', 'hello'), type = 'first')
+```
+
+
+```{r}
+mat_final <- cbind(mat_uninform, mat_words)
+
+str(mat_final)
+final_df <- as.data.frame(cbind(BloodCult$ClinHx, mat_final))
+write.csv(final_df, 'MatrixOut.csv')
+write.csv(removePunctuation(tolower(BloodCult$ClinHx[which(rowSums(mat_final) == 0)])), 'cleaned_ungroup.csv')
+```
+
+
+```{r}
+colSums(mat_final[which(rowSums(mat_final[,1:4])>=1),5:ncol(mat_final)])
+```
+```{r}
+rowSums(mat_final[,1:4])
+```
+
+
+```{r}
+table(mat, useNA = 'always')
+```
+
+
+
+```{r}
+#NAIndex <- which(is.na(BloodCult$Subclass))
+#UsefulIndex <- which(!is.na(Mat_classified))
+#BloodCult$Subclass[UsefulIndex] <- Mat_classified[UsefulIndex,]
+#BloodCult$Class[UsefulIndex] <- 'informative'
 ```
 
 
@@ -135,14 +211,8 @@ table(BloodCult$Subclass, useNA = 'always')
 ```
 
 ```{r}
-BloodCult[is.na(BloodCult$Subclass),]
+BloodCult[is.na(BloodCult$Class),]
 ```
-
-
-```{r}
-BloodCult[test[,1],]
-```
-
 
 
 
@@ -150,30 +220,14 @@ BloodCult[test[,1],]
 
 
 ```{r}
-c(NA, colnames(mat))[mat %*% 1:2 + 1]
+temp <- BloodCult[is.na(BloodCult$Class),]$ClinHx
+write_csv(as.data.frame(temp), 'ungrouped.csv')
 ```
 
 
 ```{r}
-for (i in colnames(mat)){
-  
-}
+percentageClassified(BloodCult)
 ```
-
-```{r}
-
-y <- unlist(strsplit(DomainKnowledge$`clin hx groups by rules`[2], ","))
-t <- unlist(strsplit(DomainKnowledge$`clin hx groups by rules`[1], ","))
-length(t) <- 12
-cbind(y,t,y)
-```
-
-
-
-
-
-
-
 
 
 
@@ -236,7 +290,4 @@ ggplot(m_molten, aes(x=RegDateTime, y=value)) +
 hist(table(format(x$RegDateTime,"%m-%Y")))
 ```
 
-```{r}
-
-```
 
