@@ -123,12 +123,6 @@ mat_blank[which(rowSums(mat_general)==0),] <- mat_without[which(rowSums(mat_gene
 mat_words <- cbind(mat_general, mat_blank)
 
 sum(colSums(mat_words))
-
-#Mat_classified <- colnames(mat)[max.col(mat,ties.method="first")]
-#Mat_classified <- as.data.frame(Mat_classified)
-
-#sums <- rowSums(mat)
-#Mat_classified[sums == 0,] <- NA
 ```
 
 ```{r}
@@ -181,6 +175,16 @@ str(mat_final)
 final_df <- as.data.frame(cbind(BloodCult$ClinHx, mat_final))
 write.csv(final_df, 'MatrixOut.csv')
 write.csv(removePunctuation(tolower(BloodCult$ClinHx[which(rowSums(mat_final) == 0)])), 'cleaned_ungroup.csv')
+```
+
+
+```{r}
+Mat_classified <- colnames(mat_final)[max.col(mat_final,ties.method="random")]
+Mat_classified <- as.data.frame(Mat_classified)
+table(Mat_classified, useNA = 'always')
+write.csv(Mat_classified,'SortedClass.csv')
+#sums <- rowSums(mat)
+#Mat_classified[sums == 0,] <- NA
 ```
 
 
